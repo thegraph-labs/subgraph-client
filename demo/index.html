@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Graph Client Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #fff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .demo-section h2 {
+            color: #4ade80;
+            margin-bottom: 15px;
+        }
+        button {
+            background: linear-gradient(45deg, #4ade80, #22c55e);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .results {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .loading {
+            color: #fbbf24;
+        }
+        .success {
+            color: #4ade80;
+        }
+        .error {
+            color: #f87171;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4ade80;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        input, select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin: 5px;
+            min-width: 200px;
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .github-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .github-link a {
+            color: #4ade80;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 The Graph Client Demo</h1>
+        
+        <div class="demo-section">
+            <h2>📊 Real-time Uniswap V3 Data</h2>
+            <p>Fetch live data from The Graph's decentralized network</p>
+            <button onclick="testConnection()" id="testBtn">Test Connection</button>
+            <button onclick="getTopPools()" id="poolsBtn">Get Top Pools</button>
+            <button onclick="getRecentSwaps()" id="swapsBtn">Get Recent Swaps</button>
+            <div class="results" id="results">Click a button to start testing...</div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔍 Custom Query Builder</h2>
+            <div class="input-group">
+                <select id="idType">
+                    <option value="subgraph">Subgraph ID</option>
+                    <option value="deployment">Deployment ID</option>
+                </select>
+                <input type="text" id="customId" placeholder="Enter ID..." 
+                       value="HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1">
+            </div>
+            <div class="input-group">
+                <textarea id="customQuery" placeholder="Enter GraphQL query..." style="width: 100%; height: 100px; resize: vertical;">
+{
+  factories(first: 1) {
+    id
+    poolCount
+    totalValueLockedUSD
+  }
+}</textarea>
+            </div>
+            <button onclick="runCustomQuery()" id="customBtn">Run Custom Query</button>
+            <div class="results" id="customResults">Enter a custom query above...</div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="statPools">-</div>
+                <div>Active Pools</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statTVL">-</div>
+                <div>Total Value Locked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statVolume">-</div>
+                <div>24h Volume</div>
+            </div>
+        </div>
+
+        <div class="github-link">
+            <p>🚀 Built with <a href="https://github.com/thegraph-labs/subgraph-client" target="_blank">@thegraph-labs/subgraph-client</a></p>
+            <p>🤖 Optimized for GitHub Copilot</p>
+        </div>
+    </div>
+
+    <script>
+        // Mock The Graph Gateway Client for demo
+        class TheGraphGateway {
+            constructor() {
+                this.apiUrl = 'https://gateway.thegraph.com/api';
+                this.mockMode = true; // In real implementation, this would be false
+            }
+
+            async query(subgraphId, query) {
+                return this.mockQuery('subgraph', subgraphId, query);
+            }
+
+            async queryByDeployment(deploymentId, query) {
+                return this.mockQuery('deployment', deploymentId, query);
+            }
+
+            async mockQuery(type, id, query) {
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+
+                if (query.includes('factories')) {
+                    return {
+                        data: {
+                            factories: [{
+                                id: '0x33128a8fc17869897dce68ed026d694621f6fdfd',
+                                poolCount: '1793176',
+                                totalValueLockedUSD: '117326247250.749'
+                            }]
+                        }
+                    };
+                }
+
+                if (query.includes('pools')) {
+                    return {
+                        data: {
+                            pools: [
+                                {
+                                    id: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
+                                    token0: { symbol: 'USDC' },
+                                    token1: { symbol: 'WETH' },
+                                    totalValueLockedUSD: '26603432.488',
+                                    feeTier: '500'
+                                },
+                                {
+                                    id: '0x4e68ccd3e89f51c3074ca5072bbac773960dfa36',
+                                    token0: { symbol: 'WETH' },
+                                    token1: { symbol: 'USDT' },
+                                    totalValueLockedUSD: '14263496.22',
+                                    feeTier: '3000'
+                                }
+                            ]
+                        }
+                    };
+                }
+
+                if (query.includes('swaps')) {
+                    return {
+                        data: {
+                            swaps: [
+                                {
+                                    id: '0x123abc',
+                                    timestamp: Math.floor(Date.now() / 1000),
+                                    pool: {
+                                        token0: { symbol: 'USDC' },
+                                        token1: { symbol: 'WETH' }
+                                    },
+                                    amountUSD: '5000.50'
+                                },
+                                {
+                                    id: '0x456def',
+                                    timestamp: Math.floor(Date.now() / 1000) - 60,
+                                    pool: {
+                                        token0: { symbol: 'WETH' },
+                                        token1: { symbol: 'DAI' }
+                                    },
+                                    amountUSD: '12500.75'
+                                }
+                            ]
+                        }
+                    };
+                }
+
+                return { data: { message: 'Mock response for demo' } };
+            }
+        }
+
+        const client = new TheGraphGateway();
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'loading' ? 'loading' : '';
+            results.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function logCustom(message, type = 'info') {
+            const results = document.getElementById('customResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'loading' ? 'loading' : '';
+            results.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testConnection() {
+            const btn = document.getElementById('testBtn');
+            btn.disabled = true;
+            log('🧪 Testing connection to The Graph Gateway...', 'loading');
+            
+            try {
+                const result = await client.query(
+                    'HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1',
+                    `{
+                        factories(first: 1) {
+                            id
+                            poolCount
+                            totalValueLockedUSD
+                        }
+                    }`
+                );
+
+                if (result.data?.factories) {
+                    const factory = result.data.factories[0];
+                    log(`✅ Connection successful!`, 'success');
+                    log(`📊 Factory: ${factory.id.substring(0, 20)}...`);
+                    log(`🏊 Pool Count: ${parseInt(factory.poolCount).toLocaleString()}`);
+                    log(`💰 TVL: $${parseFloat(factory.totalValueLockedUSD).toLocaleString()}`);
+                    
+                    // Update stats
+                    document.getElementById('stats').style.display = 'grid';
+                    document.getElementById('statPools').textContent = parseInt(factory.poolCount).toLocaleString();
+                    document.getElementById('statTVL').textContent = '$' + (parseFloat(factory.totalValueLockedUSD) / 1e9).toFixed(1) + 'B';
+                } else {
+                    log('❌ Unexpected response format', 'error');
+                }
+            } catch (error) {
+                log(`❌ Connection failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function getTopPools() {
+            const btn = document.getElementById('poolsBtn');
+            btn.disabled = true;
+            log('🏊 Fetching top pools...', 'loading');
+            
+            try {
+                const result = await client.query(
+                    'HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1',
+                    `{
+                        pools(first: 3, orderBy: totalValueLockedUSD, orderDirection: desc) {
+                            id
+                            token0 { symbol }
+                            token1 { symbol }
+                            totalValueLockedUSD
+                            feeTier
+                        }
+                    }`
+                );
+
+                if (result.data?.pools) {
+                    log(`✅ Found ${result.data.pools.length} top pools:`, 'success');
+                    result.data.pools.forEach((pool, i) => {
+                        const tvl = parseFloat(pool.totalValueLockedUSD);
+                        const feePercent = (parseInt(pool.feeTier) / 10000).toFixed(2);
+                        log(`${i + 1}. ${pool.token0.symbol}/${pool.token1.symbol} (${feePercent}%)`);
+                        log(`   💰 TVL: $${tvl.toLocaleString()}`);
+                    });
+                }
+            } catch (error) {
+                log(`❌ Failed to fetch pools: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function getRecentSwaps() {
+            const btn = document.getElementById('swapsBtn');
+            btn.disabled = true;
+            log('💱 Fetching recent swaps...', 'loading');
+            
+            try {
+                const result = await client.query(
+                    'HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1',
+                    `{
+                        swaps(first: 3, orderBy: timestamp, orderDirection: desc) {
+                            id
+                            timestamp
+                            pool {
+                                token0 { symbol }
+                                token1 { symbol }
+                            }
+                            amountUSD
+                        }
+                    }`
+                );
+
+                if (result.data?.swaps) {
+                    log(`✅ Found ${result.data.swaps.length} recent swaps:`, 'success');
+                    result.data.swaps.forEach((swap, i) => {
+                        const amount = parseFloat(swap.amountUSD);
+                        const time = new Date(swap.timestamp * 1000).toLocaleTimeString();
+                        log(`${i + 1}. ${swap.pool.token0.symbol} ↔ ${swap.pool.token1.symbol}`);
+                        log(`   💰 $${amount.toLocaleString()} at ${time}`);
+                    });
+                }
+            } catch (error) {
+                log(`❌ Failed to fetch swaps: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function runCustomQuery() {
+            const btn = document.getElementById('customBtn');
+            const idType = document.getElementById('idType').value;
+            const id = document.getElementById('customId').value.trim();
+            const query = document.getElementById('customQuery').value.trim();
+            
+            if (!id || !query) {
+                logCustom('❌ Please enter both ID and query', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            logCustom(`🔍 Running ${idType} query...`, 'loading');
+            logCustom(`ID: ${id.substring(0, 20)}...`);
+            
+            try {
+                let result;
+                if (idType === 'subgraph') {
+                    result = await client.query(id, query);
+                } else {
+                    result = await client.queryByDeployment(id, query);
+                }
+
+                logCustom(`✅ Query successful!`, 'success');
+                logCustom(`📊 Result: ${JSON.stringify(result.data, null, 2)}`);
+                
+            } catch (error) {
+                logCustom(`❌ Query failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize with welcome message
+        log('🚀 The Graph Client Demo Ready!');
+        log('💡 This demo showcases both authentication patterns:');
+        log('   • Subgraph ID: API key in URL');
+        log('   • Deployment ID: Bearer token in header');
+        log('🎯 Click buttons above to test live data queries');
+    </script>
+</body>
+</html>

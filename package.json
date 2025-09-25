@@ -8,6 +8,8 @@
     "test": "node examples/test-connection.js",
     "simple-test": "node examples/simple-test.js", 
     "unified-test": "node examples/unified-test.js",
+    "playwright-demo": "node examples/playwright-mcp-demo.js",
+    "demo-server": "node demo/server.js",
     "search": "node examples/search-subgraphs.js",
     "uniswap": "node examples/uniswap-queries.js",
     "playground": "node examples/playground.js",

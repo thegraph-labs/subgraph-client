@@ -48,21 +48,45 @@ Check our [deployment-ids.md](./deployment-ids.md) file for curated list of work
 ## 💡 Usage with GitHub Copilot
 
 ### Basic Query
+## 🚀 Quick Start
+
 ```javascript
-import { TheGraphGateway } from './src/simple-client.js';
+import { TheGraphGateway } from '@thegraph-labs/subgraph-client';
 
-const client = new TheGraphGateway();
+const client = new TheGraphGateway('your-api-key');
 
-// Ask Copilot: "Create a query to get the top 5 Uniswap pools by TVL"
-const result = await client.query(deploymentId, `{
-  pools(first: 5, orderBy: totalValueLockedUSD, orderDirection: desc) {
-    id
-    token0 { symbol }
-    token1 { symbol }
-    totalValueLockedUSD
-  }
-}`);
+// Query using subgraph ID (API key in URL)
+const result = await client.query(
+  'HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1', 
+  `{
+    factories(first: 5) {
+      id
+      poolCount
+      totalValueLockedUSD
+    }
+  }`
+);
+
+// Query using deployment ID (Bearer token auth)
+const deployResult = await client.queryByDeployment(
+  'QmeB7YfNvLbM9AnSVeh5JvsfUwm1KVCtUDwaDLh5oxupGh',
+  query
+);
+
+// Or let it auto-detect ID type and authentication
+const autoResult = await client.queryAuto(id, query);
 ```
+
+## 🎯 Features
+
+- **Unified API**: Single client handles both subgraph IDs and deployment IDs
+- **Auto-detection**: Automatically determines ID type and uses correct authentication
+- **Dual Authentication**: 
+  - Subgraph IDs: API key in URL path
+  - Deployment IDs: Bearer token in header
+- **Error Handling**: Comprehensive error messages with debug info
+- **Zero Config**: Works with environment variables or direct API key
+- **GitHub Copilot Optimized**: Clean, predictable API for AI assistance
 
 ### Natural Language Prompts for Copilot
 - "Generate a query to find recent swaps in Uniswap"

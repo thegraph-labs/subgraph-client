@@ -12,7 +12,7 @@ async function testWithKnownSubgraph() {
     
     // Use a known working deployment ID - this one should work
     // This is the Messari Uniswap V3 Ethereum subgraph
-    const deploymentId = 'QmW9ajg2oTyPfdWKyUkxc7cTJejwlrMq4UZHnr1HNWzjkv';
+    const deploymentId = 'QmeB7YfNvLbM9AnSVeh5JvsfUwm1KVCtUDwaDLh5oxupGh';
     
     console.log(`📊 Testing with deployment: ${deploymentId.substring(0, 20)}...`);
     

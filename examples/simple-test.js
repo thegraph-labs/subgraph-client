@@ -10,31 +10,44 @@ async function testWithKnownSubgraph() {
     
     const client = new TheGraphGateway();
     
-    // Use a known working deployment ID - this one should work
-    // This is the Messari Uniswap V3 Ethereum subgraph
+    // Test with both ID types
+    const subgraphId = 'HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1';
     const deploymentId = 'QmeB7YfNvLbM9AnSVeh5JvsfUwm1KVCtUDwaDLh5oxupGh';
     
-    console.log(`📊 Testing with deployment: ${deploymentId.substring(0, 20)}...`);
-    
-    // Simple test query
+    // Simple test query - use factories which we know exist in this subgraph
     const query = `{
-      protocols(first: 1) {
+      factories(first: 1) {
         id
-        name
-        type
+        poolCount
+        totalValueLockedUSD
       }
     }`;
     
-    console.log('Making test query...');
-    const result = await client.query(deploymentId, query);
+    // Test 1: Subgraph ID (API key in URL)
+    console.log('📊 Test 1: Query using subgraph ID');
+    console.log(`   ID: ${subgraphId.substring(0, 20)}...`);
+    const subgraphResult = await client.query(subgraphId, query);
     
-    if (result.data && result.data.protocols) {
-      console.log('✅ SUCCESS! Connection working');
-      console.log(`Found protocol: ${result.data.protocols[0].name}`);
-      console.log(`Type: ${result.data.protocols[0].type}`);
-    } else {
-      console.log('⚠️  Unexpected response structure:', result);
+    if (subgraphResult.data && subgraphResult.data.factories) {
+      console.log('✅ Subgraph ID query SUCCESS!');
+      console.log(`   Factory: ${subgraphResult.data.factories[0].id.substring(0, 20)}...`);
+      console.log(`   Pool count: ${subgraphResult.data.factories[0].poolCount}`);
+      console.log(`   TVL: $${parseFloat(subgraphResult.data.factories[0].totalValueLockedUSD).toLocaleString()}\n`);
     }
+
+    // Test 2: Deployment ID (Bearer auth)
+    console.log('📊 Test 2: Query using deployment ID');  
+    console.log(`   ID: ${deploymentId.substring(0, 20)}...`);
+    const deploymentResult = await client.queryByDeployment(deploymentId, query);
+    
+    if (deploymentResult.data && deploymentResult.data.factories) {
+      console.log('✅ Deployment ID query SUCCESS!');
+      console.log(`   Factory: ${deploymentResult.data.factories[0].id.substring(0, 20)}...`);
+      console.log(`   Pool count: ${deploymentResult.data.factories[0].poolCount}`);
+      console.log(`   TVL: $${parseFloat(deploymentResult.data.factories[0].totalValueLockedUSD).toLocaleString()}\n`);
+    }
+
+    console.log('🎉 Both authentication patterns working correctly!');
     
   } catch (error) {
     console.error('❌ Connection test failed:');

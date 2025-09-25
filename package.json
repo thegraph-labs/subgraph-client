@@ -1,0 +1,55 @@
+{
+  "name": "@thegraph-labs/subgraph-client",
+  "version": "1.0.0",
+  "description": "Direct API client for The Graph Gateway - Zero dependencies, GitHub Copilot optimized",
+  "main": "src/simple-client.js",
+  "type": "module",
+  "scripts": {
+    "test": "node examples/test-connection.js",
+    "simple-test": "node examples/simple-test.js", 
+    "search": "node examples/search-subgraphs.js",
+    "uniswap": "node examples/uniswap-queries.js",
+    "playground": "node examples/playground.js",
+    "dev": "node --watch examples/playground.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  },
+  "keywords": [
+    "thegraph",
+    "subgraph", 
+    "graphql",
+    "blockchain",
+    "defi",
+    "web3",
+    "gateway",
+    "api-client",
+    "github-copilot"
+  ],
+  "author": "The Graph Labs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thegraph-labs/subgraph-client.git"
+  },
+  "homepage": "https://github.com/thegraph-labs/subgraph-client#readme",
+  "bugs": {
+    "url": "https://github.com/thegraph-labs/subgraph-client/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "src/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ]
+}
